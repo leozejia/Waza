@@ -1,7 +1,7 @@
 ---
 name: health
 description: Audit Claude Code config drift and collaboration issues.
-version: "1.4.0"
+version: "1.5.0"
 ---
 
 # Claude Code Configuration Health Audit
@@ -40,7 +40,7 @@ echo "=== TIER METRICS ==="
 echo "source_files: $(find "$P" -type f \( -name "*.rs" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" -o -name "*.go" -o -name "*.lua" -o -name "*.swift" -o -name "*.rb" -o -name "*.java" -o -name "*.kt" -o -name "*.cs" -o -name "*.cpp" -o -name "*.c" \) -not -path "*/.git/*" -not -path "*/node_modules/*" | wc -l)"
 echo "contributors: $(git -C "$P" log --format='%ae' 2>/dev/null | sort -u | wc -l)"
 echo "ci_workflows:  $(ls "$P/.github/workflows/"*.yml "$P/.github/workflows/"*.yaml 2>/dev/null | wc -l)"
-echo "skills:        $(find "$P/.claude/skills" -name "SKILL.md" 2>/dev/null | wc -l)"
+echo "skills:        $(find "$P/.claude/skills" -name "SKILL.md" 2>/dev/null | grep -v '/health/SKILL.md' | wc -l)"
 echo "claude_md_lines: $(wc -l < "$P/CLAUDE.md" 2>/dev/null)"
 
 echo "=== CLAUDE.md (global) ===" ; cat ~/.claude/CLAUDE.md 2>/dev/null || echo "(none)"
