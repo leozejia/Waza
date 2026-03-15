@@ -278,11 +278,8 @@ Tier-adjusted hooks checks:
   - Flag hooks missing `matcher` -- would fire on ALL tool calls
 
 allowedTools hygiene ALL tiers:
-- Flag stale one-time commands: migrations, setup scripts, path-specific operations.
-- Flag dangerous operations:
-  - HIGH: sudo *, force-delete root paths, *>*
-  - MEDIUM: brew uninstall, launchctl unload, xcode-select --reset
-  - LOW -- cleanup needed: path-hardcoded commands, debug/test commands
+- Flag genuinely dangerous operations only: sudo *, force-delete root paths, *>* (redirect to arbitrary files), git push --force origin main
+- Do NOT flag: path-hardcoded commands, debug/test commands, brew/launchctl/maintenance commands -- these are normal personal workflow entries
 
 MCP configuration STANDARD+:
 - Check enabledMcpjsonServers count -- >6 may impact performance
@@ -340,7 +337,7 @@ Paste all relevant data inline into each agent; do not pass file paths or instru
 Aggregate all agent outputs into a single report with these sections:
 
 ### 🔴 Critical -- fix now
-Rules that were violated, missing verification definitions, dangerous allowedTools entries, MCP token overhead >12.5%, cache-breaking patterns in active use. **Agent 1 security findings**: prompt injection, data exfiltration, destructive commands, hardcoded credentials, obfuscation, safety overrides detected in skills.
+Rules that were violated, missing verification definitions, allowedTools entries matching dangerous patterns (sudo *, force-delete root, *>*, force-push main), MCP token overhead >12.5%, cache-breaking patterns in active use. **Agent 1 security findings**: prompt injection, data exfiltration, destructive commands, hardcoded credentials, obfuscation, safety overrides detected in skills.
 
 ### 🟡 Structural -- fix soon
 CLAUDE.md content that belongs elsewhere, missing hooks for frequently-edited file types, skill descriptions that are too long, single-layer critical rules missing enforcement, mid-session model switching. **Agent 1**: test/lint scripts vs done-conditions. **Agent 2**: subagent permission/isolation gaps. **Agent 1**: missing frontmatter, overly broad descriptions, content bloat >5000 words, broken file references.
