@@ -45,7 +45,6 @@ The skill automatically detects your project tier (Simple / Standard / Complex) 
 
 - `Unknown skill: health`: install to Claude Code explicitly with `-a claude-code`. Use `-g` if you want the skill available in every project. Restart Claude Code after installation.
 - Installer summary shows `./.agents/skills/health`: that summary is generic. For Claude Code, the installed path should end up at `./.claude/skills/health` or `~/.claude/skills/health`.
-- `/health` runs for too long: recent versions cap global skill and conversation sampling to keep audits bounded. Run it from the target project root, not from a large umbrella directory.
 - Scope: this repository targets Claude Code only. Codex and OpenClaw are not supported here.
 
 ## What Gets Checked
@@ -57,7 +56,7 @@ The skill automatically detects your project tier (Simple / Standard / Complex) 
 | **skills/** | Description token count, trigger clarity, auto-invoke strategy, frequency-based optimization |
 | **skill security** | Prompt injection, data exfiltration, destructive commands, hardcoded credentials, obfuscation, safety overrides |
 | **hooks** | Pattern field presence, file-type coverage, stale entries |
-| **MCP** | Server count, token cost estimation, context pressure detection |
+| **MCP** | Server count, token cost estimation, context pressure detection, filesystem allowlist failures |
 | **allowedTools** | Dangerous or stale one-time commands |
 | **Prompt Cache** | Dynamic timestamps, tool reordering, mid-session model switching |
 | **Three-Layer Defense** | Critical rules covered by CLAUDE.md + Skill + Hook together |

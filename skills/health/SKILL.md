@@ -65,6 +65,24 @@ try:
     print(f'est_tokens: ~{est} ({round(est/2000)}% of 200K)')
 except: print('(no MCP)')
 " 2>/dev/null || echo "(unavailable: settings.local.json missing or malformed)"
+echo "=== MCP FILESYSTEM ===" ; python3 -c "
+import json
+try:
+    d=json.load(open('$SETTINGS')); s=d.get('mcpServers', d.get('enabledMcpjsonServers', {}))
+    if isinstance(s, list):
+        print('filesystem_present: (array format -- check .mcp.json)'); print('allowedDirectories: (not detectable)')
+    else:
+        fs=s.get('filesystem') if isinstance(s, dict) else None; a=[]
+        if isinstance(fs, dict):
+            a = fs.get('allowedDirectories') or (fs.get('config', {}).get('allowedDirectories') if isinstance(fs.get('config'), dict) else [])
+            if not a and isinstance(fs.get('args'), list):
+                args=fs['args']
+                for i, v in enumerate(args):
+                    if v in ('--allowed-directories', '--allowedDirectories') and i+1<len(args): a=[args[i+1]]; break
+                if not a: a=[v for v in args if v.startswith('/') or (v.startswith('~') and len(v)>1)]
+        print('filesystem_present:', 'yes' if fs else 'no'); print('allowedDirectories:', a or '(missing or not detected)')
+except: print('(unavailable)')
+" 2>/dev/null || echo "(unavailable)"
 echo "=== allowedTools count ===" ; python3 -c "import json; d=json.load(open('$SETTINGS')); print(len(d.get('permissions',{}).get('allow',[])))" 2>/dev/null || echo "(unavailable)"
 echo "=== NESTED CLAUDE.md ===" ; find "$P" -name "CLAUDE.md" -not -path "$P/CLAUDE.md" -not -path "*/.git/*" -not -path "*/node_modules/*" 2>/dev/null || echo "(none)"
 echo "=== GITIGNORE ===" ; (grep -qE "settings\.local" "$P/.gitignore" "$P/.claude/.gitignore" 2>/dev/null && echo "settings.local.json: gitignored") || echo "settings.local.json: NOT gitignored -- risk of committing tokens/credentials"
@@ -94,6 +112,11 @@ if [ -n "$_PREV_FILES" ]; then
 else
   echo "(no conversation files)"
 fi
+
+echo "=== MCP ACCESS DENIALS ==="
+ls -t "$CONVO_DIR"/*.jsonl 2>/dev/null | head -10 | while IFS= read -r F; do
+  grep -nEm 2 'Access denied - path outside allowed directories|tool-results/.+ not in ' "$F" 2>/dev/null
+done | head -20
 
 # --- Skill scan (inventory, security, frontmatter, provenance, full content) ---
 # Exclude self by frontmatter name field -- stable across install paths
@@ -218,7 +241,7 @@ Tier-adjusted MEMORY.md checks STANDARD+:
 - Check if project has `.claude/projects/.../memory/MEMORY.md`
 - Verify CLAUDE.md references MEMORY.md for architecture decisions
 - Ensure key design decisions: data models, API contracts, major tradeoffs are documented there
-- Weight urgency by conversation count from CONVERSATION FILES section: 0–2 files = low urgency, 3–9 = medium, 10+ = 🔴 Critical if MEMORY.md absent -- active projects lose decisions across sessions
+- Weight urgency by conversation count (0–2 = low, 3–9 = medium, 10+ = 🔴 Critical if MEMORY.md absent)
 
 Tier-adjusted AGENTS.md checks COMPLEX with multiple modules:
 - Verify CLAUDE.md includes "AGENTS.md 使用指南" section
@@ -228,7 +251,8 @@ MCP token cost check ALL tiers:
 - Count MCP servers and estimate token overhead: ~200 tokens/tool, ~25 tools/server
 - If estimated MCP tokens > 10% of 200K context (~20,000 tokens), flag as context pressure
 - If >6 servers, flag as HIGH: likely exceeding 12.5% context overhead
-- Check if any idle/rarely-used servers could be disconnected to reclaim context
+- Flag too-narrow filesystem allowlists when `~/.claude/projects/.../tool-results` denials indicate breakage
+- Flag idle/rarely-used servers to disconnect and reclaim context
 
 Startup context budget ALL tiers:
 - Compute: (global_claude_words + local_claude_words + rules_words + skill_desc_words) × 1.3 + mcp_tokens
@@ -260,7 +284,7 @@ CRITICAL DISTINCTION: Differentiate between a skill that DISCUSSES a security pa
 🟡 Quality checks:
 1. Missing or incomplete YAML frontmatter: no name, no description, no version
 2. Description too broad: would match unrelated user requests
-3. Content bloat: skill >5000 words
+3. Content bloat: skill >5000 words -- split large reference docs into supporting files
 4. Broken file references: skill references files that do not exist
 5. Subagent hygiene: Agent tool calls in skills that lack explicit tool restrictions, isolation mode, or output format constraint
 
@@ -279,7 +303,7 @@ Prompt:
 ```
 All data is provided inline below. DO NOT use the Read tool or Bash tool to read any files.
 
-[PASTE Step 1 output sections: settings.local.json, GITIGNORE, CLAUDE.md (global), CLAUDE.md (local), hooks, allowedTools count, skill descriptions, CONVERSATION EXTRACT]
+[PASTE Step 1 output sections: settings.local.json, GITIGNORE, CLAUDE.md (global), CLAUDE.md (local), hooks, MCP FILESYSTEM, MCP ACCESS DENIALS, allowedTools count, skill descriptions, CONVERSATION EXTRACT]
 
 This project is tier: [SIMPLE / STANDARD / COMPLEX] — apply only the checks appropriate for this tier.
 
@@ -308,6 +332,7 @@ Credential exposure ALL tiers:
 MCP configuration STANDARD+:
 - Check enabledMcpjsonServers count -- >6 may impact performance
 - Check filesystem MCP has allowedDirectories configured
+- If `~/.claude/projects/.../tool-results/*` denials show real breakage, escalate and output a ready-to-run `python3` one-liner that appends the narrowest missing path to `allowedDirectories` in `settings.local.json`
 
 Prompt cache hygiene ALL tiers:
 - Check CLAUDE.md or hooks for dynamic timestamps/dates injected into system-level context -- breaks prompt cache on every request
@@ -337,13 +362,13 @@ Subagents hygiene STANDARD+:
 
 ## Part B: Behavior Pattern Audit
 
-Data source: up to 3 recent conversation files. Confidence is limited -- only flag patterns with clear evidence. Mark each finding with [HIGH CONFIDENCE] if seen in multiple files, [LOW CONFIDENCE] if seen in only one file or inferred from partial data.
+Data source: up to 3 recent conversation files; only flag patterns with clear evidence. Tag each finding [HIGH CONFIDENCE] (multiple files) or [LOW CONFIDENCE] (single file or inferred).
 
 1. Rules violated: Find cases where CLAUDE.md says NEVER/ALWAYS but Claude did the opposite. Quote both the rule and the violation. Only flag if directly observed, not inferred.
 2. Repeated corrections: Find cases where the user corrected Claude's behavior more than once on the same issue. Requires evidence in at least 2 conversations to flag as repeated.
 3. Missing local patterns: Find project-specific behaviors the user reinforced in conversation but that aren't in local CLAUDE.md.
 4. Missing global patterns: Find behaviors that would apply to any project that aren't in ~/.claude/CLAUDE.md.
-5. Skill frequency STANDARD+: Only report frequency if skill invocations are directly visible in the conversation evidence. Do not infer monthly rates from fewer than 3 sessions -- mark as [INSUFFICIENT DATA] instead.
+5. Skill frequency STANDARD+: Only report frequency if skill invocations are directly visible in the conversation evidence. Do not infer monthly rates from fewer than 3 sessions -- mark as [INSUFFICIENT DATA] instead. For verified <1/month skills: retire from skills/ and move to AGENTS.md as plain documentation.
 6. Anti-patterns: Only flag what is directly observable in the sample:
    - Claude declaring done without running verification
    - User re-explaining same context across sessions -- missing HANDOFF.md or memory
@@ -351,7 +376,7 @@ Data source: up to 3 recent conversation files. Confidence is limited -- only fl
 
 Output: bullet points only, two sections:
 [CONTROL LAYER: hooks issues | allowedTools to remove | cache hygiene | three-layer gaps | verification gaps | subagents issues]
-[BEHAVIOR: rules violated | repeated corrections | add to local CLAUDE.md | add to global CLAUDE.md | skill frequency | anti-patterns -- each finding tagged with confidence level]
+[BEHAVIOR: rules violated | repeated corrections | add to local CLAUDE.md | add to global CLAUDE.md | skill frequency | anti-patterns (tag each with confidence level)]
 ```
 
 Paste all relevant data inline into each agent; do not pass file paths or instruct agents to read files.
@@ -361,13 +386,13 @@ Paste all relevant data inline into each agent; do not pass file paths or instru
 Aggregate all agent outputs into a single report with these sections:
 
 ### 🔴 Critical -- fix now
-Rules that were violated, missing verification definitions, allowedTools entries matching dangerous patterns (sudo *, force-delete root, *>*, force-push main), MCP token overhead >12.5%, cache-breaking patterns in active use. **Agent 1 security findings**: prompt injection, data exfiltration, destructive commands, hardcoded credentials, obfuscation, safety overrides detected in skills.
+Rules that were violated, missing verification definitions, allowedTools entries matching dangerous patterns (sudo *, force-delete root, *>*, force-push main), MCP token overhead >12.5%, repeated filesystem `Access denied` on required paths, cache-breaking patterns in active use. **Agent 1 security findings**: prompt injection, data exfiltration, destructive commands, hardcoded credentials, obfuscation, safety overrides detected in skills.
 
 ### 🟡 Structural -- fix soon
-CLAUDE.md content that belongs elsewhere, missing hooks for frequently-edited file types, skill descriptions that are too long, single-layer critical rules missing enforcement, mid-session model switching. **Agent 1**: test/lint scripts vs done-conditions. **Agent 2**: subagent permission/isolation gaps. **Agent 1**: missing frontmatter, overly broad descriptions, content bloat >5000 words, broken file references.
+CLAUDE.md content that belongs elsewhere, missing hooks for frequently-edited file types, skill descriptions that are too long, single-layer critical rules missing enforcement, mid-session model switching. **Agent 1**: test/lint scripts vs done-conditions. **Agent 2**: subagent permission/isolation gaps. **Agent 1**: missing frontmatter, overly broad descriptions, content bloat >5000 words (suggest supporting files), broken file references.
 
 ### 🟢 Incremental -- nice to have
-New patterns to add, outdated items to remove, global vs local placement improvements, context hygiene habits, HANDOFF.md adoption. **Agent 2 skill frequency findings**: skills to tune auto-invoke strategy or retire. **Agent 1 provenance findings**: symlink source identification, missing version numbers, unknown-origin skills.
+New patterns to add, outdated items to remove, global vs local placement improvements, context hygiene habits, HANDOFF.md adoption. **Agent 2**: skills to tune auto-invoke strategy, retire, or move to AGENTS.md. **Agent 1**: symlink source, missing version numbers, unknown-origin skills.
 
 ---
 
@@ -375,6 +400,7 @@ New patterns to add, outdated items to remove, global vs local placement improve
 - Never auto-apply fixes without explicit confirmation.
 - Never apply complex-tier checks to simple projects.
 - Flag issues; do not replace architectural judgment.
+
 
 **Stop condition:** After presenting the report, ask:
 > "Should I draft the changes? I can handle each layer separately: global CLAUDE.md / local CLAUDE.md / hooks / skills."
