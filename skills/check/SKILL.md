@@ -58,6 +58,8 @@ These are not negotiable:
 - **Shared state**: unsynchronized writes, check-then-act races, missing locks
 - **External trust**: output from LLMs, APIs, or user input fed into commands or queries without sanitization; credentials hardcoded or logged
 - **Missing cases**: enum or match exhaustiveness; use grep on sibling values outside the diff to confirm
+- **Unknown identifiers in diff**: any function, method, variable, or type name introduced in the diff that does not exist in the codebase is a hard stop. Before writing or approving a reference to an identifier, grep for it: `grep -r "identifier_name" .` -- if it returns no results outside the diff itself, it does not exist. Do not assume the name is correct from memory.
+
 - **Dependency changes**: unexpected additions or version bumps in `package.json`, `Cargo.toml`, `go.mod`, or `requirements.txt`. Flag any new dependency not obviously required by the diff.
 
 ### Soft signals (flag, do not block)

@@ -225,6 +225,27 @@ echo "=== SKILL FULL CONTENT (sample: up to 3 skills, 60 lines each) ==="
 done
 ```
 
+## Step 1b: MCP Live Check
+
+After the bash block completes, for each MCP server listed in the settings, attempt to call it and verify it actually responds. Do this before launching analysis agents.
+
+For each server name found in Step 1:
+1. Try listing its available tools (e.g., call a `list_tools` or any known lightweight tool from that server).
+2. If the call succeeds: mark `live=yes`.
+3. If it fails or times out: mark `live=no`, note the error.
+
+Record the result as a table:
+
+```
+MCP Live Status:
+  server_name    live=yes  (N tools available)
+  other_server   live=no   error: connection refused / tool not found / API key invalid
+```
+
+Pass this table to Agent 1 for inclusion in the MCP findings section.
+
+**If API keys are required**: look for relevant env var names in the server config (e.g., `XCRAWL_API_KEY`, `OPENAI_API_KEY`). Do not attempt to validate the key value itself -- just note whether the env var is set: `echo $VAR_NAME | head -c 5` (5 chars only, do not print the full key).
+
 ## Gotchas
 
 Before interpreting Step 1 output, check these known failure modes.
