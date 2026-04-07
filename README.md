@@ -68,7 +68,7 @@ curl -sL https://raw.githubusercontent.com/tw93/Waza/main/templates/coaching-en.
 **Claude Code:**
 
 ```bash
-npx skills add tw93/Waza -g -y
+npx skills add tw93/Waza -a claude-code -g -y
 ```
 
 **Other agents:** run without the `-a` flag to pick your agent interactively.
