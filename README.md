@@ -28,6 +28,7 @@ Each engineering habit gets a [Claude Code skill](https://docs.anthropic.com/en/
 | :--- | :--- | :--- |
 | [`/think`](skills/think/SKILL.md) | Before building anything new | Challenges the problem, pressure-tests the design, validates architecture before any code is written. |
 | [`/design`](skills/design/SKILL.md) | Building frontend interfaces | Produces distinctive UI with a committed aesthetic direction, not generic defaults. |
+| [`/drive`](skills/drive/SKILL.md) | During implementation | Enforces Red-Green-Refactor with one behavior per cycle and explicit verification evidence. |
 | [`/check`](skills/check/SKILL.md) | After a task, before merging | Reviews the diff, auto-fixes safe issues, blocks destructive commands via hooks, verifies with evidence. |
 | [`/hunt`](skills/hunt/SKILL.md) | Any bug or unexpected behavior | Systematic debugging. Root cause confirmed before any fix is applied. |
 | [`/write`](skills/write/SKILL.md) | Writing or editing prose | Rewrites prose to sound natural in Chinese and English. Strips AI writing patterns. |

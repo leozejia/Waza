@@ -1,6 +1,6 @@
 # Waza
 
-Personal skill collection for Claude Code. Eight skills covering the complete engineering workflow: think, design, check, hunt, write, learn, read, health.
+Personal skill collection for Claude Code. Nine skills covering the complete engineering workflow: think, drive, design, check, hunt, write, learn, read, health.
 
 ## Communication
 
@@ -15,6 +15,7 @@ skills/
 │   ├── agents/   -- reviewer-security.md, reviewer-architecture.md
 │   └── references/  -- persona-catalog.md
 ├── design/       -- production-grade frontend UI
+├── drive/        -- implementation protocol (Red-Green-Refactor)
 ├── health/       -- Claude Code config audit
 │   └── agents/   -- inspector-context.md, inspector-control.md
 ├── hunt/         -- systematic debugging
@@ -37,7 +38,7 @@ Each skill has a `SKILL.md` (loaded on demand by Claude). Supporting content liv
 for f in skills/*/SKILL.md; do head -5 "$f" | grep -q "^name:" && echo "ok: $f" || echo "MISSING name: $f"; done
 
 # Version consistency: SKILL.md must match marketplace.json
-for skill in check design health hunt learn read think write; do
+for skill in check design drive health hunt learn read think write; do
   skill_ver=$(grep "^version:" "skills/$skill/SKILL.md" | awk '{print $2}')
   market_ver=$(python3 -c "import json; d=json.load(open('.claude-plugin/marketplace.json')); print([p['version'] for p in d['plugins'] if p['name']=='$skill'][0])")
   [ "$skill_ver" = "$market_ver" ] && echo "ok: $skill $skill_ver" || echo "MISMATCH: $skill SKILL=$skill_ver MARKET=$market_ver"
