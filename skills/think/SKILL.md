@@ -108,28 +108,13 @@ If any axis is low: loop back. Low on (1) returns to Phase 1. Low on (2) returns
 
 If all three are solid: state the confidence assessment in 2-3 sentences at the end of the approved design summary, then stop. Do not proceed into implementation.
 
-## Implementation Protocol
+## Implementation Handoff
 
-Once the design is approved, enforce one behavior per cycle.
+Think ends at approved design.
 
-**RED**: Write the smallest test that proves the behavior is missing. Run it. It must fail for the right reason, not from a typo or missing import.
+Once implementation starts, switch to `/drive` and follow that skill for Red-Green-Refactor execution.
 
-**GREEN**: Write the minimum code to pass the test. No refactor, no extras.
-
-**REFACTOR**: Remove duplication, improve names. Re-run tests after each step.
-
-Do not write production code before a failing test. "Small change" and "obviously works" are not exceptions.
-
-Before claiming done:
-
-```
-Behavior:   [one sentence]
-RED seen:   yes/no
-GREEN seen: yes/no
-Verify:     [command] -> pass/fail
-```
-
-If RED or GREEN was not observed, status is not complete.
+When implementation is complete, use `/check` for final review and verification before merge.
 
 ## Gotchas
 
