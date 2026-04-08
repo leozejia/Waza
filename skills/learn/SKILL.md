@@ -29,7 +29,7 @@ Gather primary sources only: papers that introduced key ideas, official lab/prod
 
 For each source: download, convert to Markdown, file into a structured directory organized by sub-topic. Use `/read` for individual pages.
 
-**Source Discovery:** if a web search plugin is installed (e.g., PipeLLM), use it. Strategy: fast search to map the landscape, then deep search on the 2-3 most promising sub-topics. Otherwise: `WebSearch` or `curl + defuddle.md`.
+**Source Discovery:** if a web search plugin is installed (e.g., PipeLLM search), use it. Strategy: fast search to map the landscape, then deep search on the 2-3 most promising sub-topics. Otherwise: `WebSearch` or `curl + defuddle.md`.
 
 Target: 5-10 sources for a blog post, 15-20 for a deep technical survey.
 

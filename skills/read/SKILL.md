@@ -46,7 +46,7 @@ After saving and reporting the path, stop. Do not analyze, comment on, or discus
 
 ## Notes
 
-- If a web search plugin is installed (e.g., PipeLLM), use it for URL discovery before fetching.
+- If a web search plugin is installed (e.g., PipeLLM search), use it for URL discovery before fetching.
 - r.jina.ai and defuddle.md require no API key
 - Network failures: prepend local proxy env vars if available
 - Long content: `| head -n 200` to preview first
