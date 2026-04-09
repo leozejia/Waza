@@ -133,6 +133,7 @@ Eliminate predictable AI writing patterns. Write like a human: varied, imperfect
 **Fractal summaries**: "what I'm going to tell you; what I'm telling you; what I just told you":
 > NO: "In this section, we'll explore... [3000 words later] ...as we've seen in this section."
 > OK: Skip the preview and the recap. Write the content.
+> Exception: a single closing sentence in a TL;DR that orients non-specialist readers to the structure ahead ("The rest of this piece follows X in order...") is intentional navigation, not a fractal summary. Keep it; flag it at most, but do not delete without author approval.
 
 **Signposted conclusions:**
 > NO: "In conclusion..." / "To sum up..." / "In summary..."
@@ -168,7 +169,7 @@ Eliminate predictable AI writing patterns. Write like a human: varied, imperfect
 - Paragraph ends with punchy one-liner? Vary it.
 - Em-dash anywhere? Remove it.
 - Vague declarative ("The implications are significant")? Name the specific implication.
-- Meta-joiners ("The rest of this essay...")? Delete. Let the essay move.
+- Meta-joiners ("The rest of this essay...")? Delete. Exception: a single TL;DR closing sentence that orients readers to the structure ahead is navigation, not filler. Keep it.
 - Any bullet starting with bold label? Reconsider the format.
 - Any "In conclusion" or "To sum up"? Cut it.
 - Any emoji? Remove it.
