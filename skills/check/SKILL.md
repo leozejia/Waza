@@ -83,6 +83,7 @@ If any of these phrases appear in your reasoning, stop and run verification firs
 |---------------|------|
 | Commented on #249 when discussing #255 | Run `gh issue view N` to confirm title before acting |
 | PR comments sounded like a report | 1-2 sentences, natural, like a colleague |
+| PR comment used bullet points | Write as paragraphs; thank the contributor first |
 | Released with no artifacts attached | Verify every artifact exists locally and is uploaded |
 | `article.en.md` inside `_posts_en/` doubled the suffix | Check naming convention of existing files in the target directory |
 | "Trivial one-line fix" broke things | If the urge to skip verification arises, run tests anyway |
