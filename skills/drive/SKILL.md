@@ -1,7 +1,8 @@
 ---
 name: drive
 description: "Invoke whenever behavior code is written or changed: new feature logic, bug fix logic, state transitions, validation rules, or API contract behavior. Enforces Red-Green-Refactor with one behavior per cycle. Not for pure documentation edits or throwaway spikes."
-version: 3.2.0
+metadata:
+  version: "3.2.0"
 allowed-tools:
   - Bash
   - Read

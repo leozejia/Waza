@@ -2,11 +2,6 @@
 
 Personal skill collection for Claude Code. Nine skills covering the complete engineering workflow: think, drive, design, check, hunt, write, learn, read, health.
 
-## Communication
-
-- Do not use em dashes (U+2014) in any output. Use commas, periods, colons, or semicolons instead.
-- This applies to all skill templates, report examples, progress lines, and any example output embedded in skill files.
-
 ## Structure
 
 ```
@@ -26,12 +21,14 @@ skills/
     └── references/  -- write-zh.md, write-en.md
 .claude-plugin/
 └── marketplace.json  -- plugin registry for npx distribution
-install.sh            -- symlink installer
 ```
 
 Each skill has a `SKILL.md` (loaded on demand by Claude). Supporting content lives in subdirectories.
 
 ## Verification
+
+Run all checks below before any commit. Use `/check` if the diff is non-trivial.
+Prefer `make test`; expanded checks:
 
 ```bash
 # All SKILL.md files have valid frontmatter
@@ -39,7 +36,7 @@ for f in skills/*/SKILL.md; do head -5 "$f" | grep -q "^name:" && echo "ok: $f" 
 
 # Version consistency: SKILL.md must match marketplace.json
 for skill in check design drive health hunt learn read think write; do
-  skill_ver=$(grep "^version:" "skills/$skill/SKILL.md" | awk '{print $2}')
+  skill_ver=$(grep -m1 "version:" "skills/$skill/SKILL.md" | tr -d '"' | awk '{print $2}')
   market_ver=$(python3 -c "import json; d=json.load(open('.claude-plugin/marketplace.json')); print([p['version'] for p in d['plugins'] if p['name']=='$skill'][0])")
   [ "$skill_ver" = "$market_ver" ] && echo "ok: $skill $skill_ver" || echo "MISMATCH: $skill SKILL=$skill_ver MARKET=$market_ver"
 done

@@ -67,6 +67,8 @@ Subagent hygiene, STANDARD+:
 
 Data source: up to 3 recent conversation files. Only flag clear evidence. Tag each finding [HIGH CONFIDENCE] or [LOW CONFIDENCE].
 
+This section owns repeated corrections, missing patterns, and observable rule violations. Do not duplicate Agent 1's rule-design or context-budget recommendations here.
+
 1. Rules violated: quote the NEVER/ALWAYS rule and observed violation. No inference.
 2. Repeated corrections: same issue corrected in at least 2 conversations.
 3. Missing local patterns: project-specific behaviors reinforced in conversation but missing from local CLAUDE.md.

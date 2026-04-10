@@ -1,124 +1,65 @@
 ---
 name: hunt
 description: Invoke when debugging any error, crash, unexpected behavior, or failing test. Finds root cause before applying any fix. Not for code review or new features.
-version: 3.2.0
-allowed-tools:
-  - Bash
-  - Read
-  - Edit
-  - Write
-  - Grep
-  - Glob
-  - WebSearch
-  - AskUserQuestion
+metadata:
+  version: "3.5.0"
 ---
 
 # Hunt: Diagnose Before You Fix
 
-A patch applied to a symptom creates a new bug somewhere else. Find the origin first.
+Prefix your first line with 🥷 inline, not as its own paragraph.
 
-**Do not touch code until you can state the root cause in one sentence.**
 
-## Orientation
+A patch applied to a symptom creates a new bug somewhere else.
 
-Start by building a complete picture of what happened:
-
-- Get the exact error, stack trace, and steps to reproduce. If anything is missing, ask one specific question.
-- Review recent changes to the files named in the error or stack trace. Regressions almost always live in recent commits.
-- Trace the execution path from the symptom backward: follow the data, not intuition.
-- Reproduce it yourself. If you cannot reproduce it reliably, you do not understand it yet.
-
-Before going further, commit to a testable claim:
+**Do not touch code until you can state the root cause in one sentence:**
 > "I believe the root cause is [X] because [evidence]."
 
-The claim must name a specific file, function, line, or condition. "A state management issue" is not testable. "Stale cache in `useUser` at `src/hooks/user.ts:42` because the dependency array is missing `userId`" is testable. If you cannot be that specific, you do not have a hypothesis yet.
-
-## Known Failure Shapes
-
-When a hypothesis is hard to form, match the symptom to a known shape:
-
-| Shape | Clues | Where to look |
-|-------|-------|---------------|
-| Timing problem | Intermittent, load-dependent | Concurrent access to shared state |
-| Missing guard | Crash on field or index access | Optional values, empty collections |
-| Ordering bug | Works in isolation, fails in sequence | Event callbacks, transaction scope |
-| Boundary failure | Timeout, wrong response shape | External APIs, service edges |
-| Environment mismatch | Local pass, CI fail | Env vars, feature flags, seeded data |
-| Stale value | Old data shown, refreshes on restart | In-memory cache, memoized result |
-| Condition wait | Sleeping for time instead of state | Replace fixed sleeps with polling: check file exists, port responds, or process exits |
-
-Also worth checking: existing TODOs near the failure site, and whether this area has been patched before. Recurring fixes in the same place mean the abstraction is wrong.
-
-Pay attention to deflection. When a developer or user says "that part doesn't matter" or "don't worry about that area," treat it as a signal rather than a clearance. The area someone is reluctant to examine is often where the actual problem lives.
-
-## Check the Knowledge Store
-
-Before deep investigation, search for prior solutions to the same or similar bug in `docs/solutions/` (if it exists). If a match is found, read the solution file. It may contain the root cause, what approaches failed, and the fix. This can save an entire investigation.
-
-## Check for Known Issues
-
-Before deep investigation, search open issues and recent CI failures for the same symptom. If `gh` is not installed, install it first.
-
-## Confirm or Discard the Hypothesis
-
-Add one targeted instrument: a log line, a failing assertion, or the smallest possible test that would fail if the hypothesis is correct. Run it.
-
-If the evidence contradicts the hypothesis, discard it completely and re-orient with what was just learned. Do not preserve a hypothesis that the evidence disproves.
-
-After three failed hypotheses, stop. Do not guess a fourth time. Instead, surface the situation to the user: what was checked, what was ruled out, what is still unknown. Ask whether to add more instrumentation, escalate, or approach the problem differently.
-
-**Same symptom after a fix is a hard stop.** If the user reports the same symptom after a patch was applied, do not patch again. Treat it as a new investigation: the previous hypothesis was wrong. Re-read the execution path from scratch. Three rounds of "fixed but still broken" in the same area means the abstraction is wrong, not the specific line.
-
-**Never state environment details from memory.** Before diagnosing OS, compiler, SDK, or tool version issues, run the detection command first: `sw_vers`, `xcodebuild -version`, `node --version`, `rustc --version`, etc. State the actual output. A diagnosis built on an assumed version is not a diagnosis.
-
-**External tool or MCP failure: diagnose before switching.** When an MCP tool, CLI dependency, or external API is unavailable or returning errors, do not immediately try an alternative method. First determine why it failed: is the server running? Is the API key valid or expired? Is the config pointing to the right endpoint? Is a proxy needed? Switching to a workaround without diagnosing the root cause leaves the original problem intact and wastes the next session too.
-
-Stop and reassess if you catch yourself:
-- Writing a fix before you have finished tracing the flow
-- Thinking "let me just try this"
-- Finding that each fix surfaces a new problem in a different module
+Name a specific file, function, line, or condition. "A state management issue" is not testable. "Stale cache in `useUser` at `src/hooks/user.ts:42` because the dependency array is missing `userId`" is testable. If you cannot be that specific, you do not have a hypothesis yet.
 
 ## Rationalization Watch
 
-These phrases are diagnostic failures in disguise. When one surfaces, stop and re-examine:
+When these surface, stop and re-examine:
 
 | What you're thinking | What it actually means | Rule |
 |---|---|---|
 | "I'll just try this one thing" | No hypothesis, random-walking | Stop. Write the hypothesis first. |
 | "I'm confident it's X" | Confidence is not evidence | Run an instrument that proves it. |
 | "Probably the same issue as before" | Treating a new symptom as a known pattern | Re-read the execution path from scratch. |
-| "It works on my machine" | Environment difference IS the bug | Enumerate every env difference before dismissing it. |
+| "It works on my machine" | Environment difference IS the bug | Enumerate every env difference before dismissing. |
 | "One more restart should fix it" | Avoiding the error message | Read the last error verbatim. Never restart more than twice without new evidence. |
 
-## Apply the Fix
+## Hard Rules
 
-Once the root cause is confirmed:
+- **Same symptom after a fix is a hard stop.** The previous hypothesis was wrong. Re-read the execution path from scratch.
+- **After three failed hypotheses, stop.** Surface to the user: what was checked, what was ruled out, what is unknown. Ask how to proceed.
+- **Never state environment details from memory.** Run detection first: `sw_vers`, `xcodebuild -version`, `node --version`, `rustc --version`. State the actual output.
+- **External tool failure: diagnose before switching.** When an MCP tool or API fails, determine why first (server running? API key valid? Config correct?) before trying an alternative.
+- **Pay attention to deflection.** When someone says "that part doesn't matter," treat it as a signal. The area someone avoids examining is often where the problem lives.
+- **Visual/rendering bugs: static analysis first.** Trace paint layers, stacking contexts, and layer order in DevTools before adding console.log or visual debug overlays. Logs cannot capture what the compositor does. Only add instrumentation after static analysis fails.
+- **Fix the cause, not the symptom.** If the fix touches more than 5 files, pause and confirm scope with the user.
+- **Verify target before editing.** Before modifying any file, grep to confirm the function, variable, or code path exists at the expected location. If grep returns nothing, re-examine the execution path. Do not edit based on memory.
+- **Never reference what does not exist.** Before calling a function or using an identifier in a fix, grep the codebase to verify it exists. No results = do not use it. Create it explicitly first or choose an identifier that does exist.
+- If you catch yourself writing a fix before finishing the trace, or thinking "let me just try this," stop.
 
-- Fix the cause, not the symptom it produces
-- Keep the diff small: fewest files, fewest lines
-- Write one regression test that fails on the unfixed code and passes after the fix. If the bug is non-testable (timing, environment-specific, UI rendering), document why and add the best available guard instead.
-- For large projects, run the targeted subset first (tests in the affected module). Run the full suite only after the targeted tests pass. Paste the full output, no summaries.
-- If the change touches more than 5 files, pause and confirm the scope with the user
+## Confirm or Discard
 
-**Self-regulation:** track how the fix is going. If you have reverted the same area twice, or if the current fix touches more than 3 files for what started as a single bug, stop. Do not keep patching. Describe what is known and unknown, and ask the user how to proceed. Continued patching past this point means the abstraction is wrong, not the code.
-
-After the fix lands, consider whether a second layer of defense makes sense: validate the same condition at the call site, the service boundary, or in a test. A bug that cannot be introduced again is better than a bug that was fixed once.
+Add one targeted instrument: a log line, a failing assertion, or the smallest test that would fail if the hypothesis is correct. Run it. If the evidence contradicts the hypothesis, discard it completely and re-orient with what was just learned. Do not preserve a hypothesis the evidence disproves.
 
 ## Gotchas
 
-Real failures from prior sessions, in order of frequency:
-
-- **Fixed the wrong code path.** Patched the client pane instead of the local pane because I guessed the location from the symptom. Trace the execution path from the symptom backward before touching any file.
-- **Same symptom, four patches.** Applied a fix, got the same error back, patched again. Each patch buried the real cause deeper. Same symptom after a fix = stop and re-read the whole execution path from scratch.
-- **Stated macOS version from memory.** Diagnosed a notarytool failure as "macOS 26 beta." It was a stable release. Run `sw_vers` first. A diagnosis built on assumed versions is not a diagnosis.
-- **Tried workarounds before diagnosing tool failure.** xcrawl MCP wasn't loading; I tried WebFetch instead of checking why. Check server status, API key validity, and config before switching methods.
-- **Wrote the fix before finishing the trace.** "Let me just try this" is a red flag. It means the hypothesis is incomplete. Stop, finish the trace, write the hypothesis in one sentence, then write the fix.
-- **Blind restart loop.** Restarted the server 8 times, changing one variable each time without reading the actual error response body. Read the last error verbatim before restarting; never restart more than twice without a new evidence-based hypothesis.
-- **Pipeline healthy but no output.** Orchestrator reported RUNNING, but TTS vendor was misconfigured. Polled status instead of testing each stage. In multi-stage pipelines (ASR->LLM->TTS), test each stage in isolation when the orchestrator says healthy but output is missing.
+| What happened | Rule |
+|---------------|------|
+| Patched client pane instead of local pane | Trace the execution path backward before touching any file |
+| Same error after 4 patches, each burying the real cause | Same symptom = stop and re-read the whole execution path from scratch |
+| Diagnosed "macOS 26 beta," it was a stable release | Run `sw_vers` first; never state versions from memory |
+| MCP not loading, tried WebFetch instead of diagnosing | Check server status, API key, config before switching methods |
+| Wrote the fix before finishing the trace | "Let me just try this" = incomplete hypothesis. Stop. |
+| Restarted 8 times without reading the actual error response | Read the last error verbatim before restarting |
+| Orchestrator said RUNNING but TTS vendor was misconfigured | In multi-stage pipelines, test each stage in isolation |
+| Used `format_size` (nonexistent), should have been `bytes_to_human` | Grep for the function name before writing a call to it |
 
 ## Outcome
-
-End with a short summary:
 
 ```
 Root cause:  [what was wrong, file:line]
@@ -127,4 +68,4 @@ Confirmed:   [evidence or test that proves the fix]
 Tests:       [pass/fail count, regression test location]
 ```
 
-Status is one of: **resolved**, **resolved with caveats** (state them), or **blocked** (state what is unknown and why).
+Status: **resolved**, **resolved with caveats** (state them), or **blocked** (state what is unknown).

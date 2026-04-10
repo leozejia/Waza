@@ -1,43 +1,39 @@
 ---
 name: think
 description: Invoke before writing any code for a new feature, design, or architecture decision. Turns rough ideas into approved plans with validated structure. Not for bug fixes or small edits.
-version: 3.2.0
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
-  - WebSearch
-  - AskUserQuestion
+metadata:
+  version: "3.5.0"
 ---
 
 # Think: Design and Validate Before You Build
 
-Turn a rough idea into a clear, approved plan, then pressure-test the architecture before a line of code is written.
+Prefix your first line with 🥷 inline, not as its own paragraph.
 
-No code, no scaffolding, no implementation until the user has approved a design. No code snippets, no pseudo-code, no "just to illustrate" examples. Words and diagrams only.
 
-Give opinions directly. Avoid: "That's an interesting approach," "There are many ways to think about this," "You might want to consider." Take a position and state what evidence would change it.
+Turn a rough idea into an approved plan. No code, no scaffolding, no pseudo-code until the user approves.
 
-## Phase 0: Assess Depth
+Give opinions directly. Take a position and state what evidence would change it. Avoid "That's interesting," "There are many ways to think about this," "You might want to consider."
 
-Before reading any files, assess the task scope from the user's description.
+## Before Reading Any Code
 
-| Depth | Characteristics | Work Units |
-|-------|----------------|------------|
-| **Lightweight** | Single file, config change, simple addition. Low ambiguity. | 2-4 |
-| **Standard** | Multi-file feature, integration, moderate complexity. | 3-6 |
-| **Deep** | New system, cross-cutting change, unfamiliar domain, or high risk. | 4-8+ |
+- Confirm the working path: `pwd` or `git rev-parse --show-toplevel`. Never assume `~/project` and `~/www/project` are the same.
+- Check `docs/solutions/` if present for prior decisions on the same problem.
+- Search for related issues and PRs on GitHub before proposing anything.
 
-A "work unit" is one focused implementation step that produces a testable result.
+## Propose Approaches
 
-State the depth in one line: "Depth: Lightweight / Standard / Deep -- reason."
+Offer 2-3 options with tradeoffs and a recommendation. Always include one minimal option. For each option: one-sentence summary, effort, risk, and what existing code it builds on. For the recommendation: attack it first. What would make this fail? If the attack holds, deform the design and present the deformed version. If it shatters the approach entirely, discard it and tell the user why.
 
-**Auto-reclassification:** if Phase 1 or Phase 2 reveals an external contract surface (third-party API, undocumented system behavior, shared type exported to callers), bump up one depth level and note why.
+Get approval before proceeding. If the user rejects, ask specifically what did not work. Do not restart from scratch.
 
-## Phase 1: Understand the Problem
+## Validate Before Handing Off
 
-Review recent commit history and read CLAUDE.md (if present). Then read the files the user mentioned or that are obviously related to the idea (entry points, main modules). Ask if it is unclear which files are relevant. Then work through the idea one question at a time: purpose first, constraints second, success criteria third.
+- More than 8 files or 1 new service? Acknowledge it explicitly.
+- More than 3 components exchanging data? Draw an ASCII diagram. Look for cycles.
+- Every meaningful test path listed: happy path, errors, edge cases.
+- Can this be rolled back without touching data?
+- Every API key, token, and third-party account the plan requires listed with one-line explanations. No credential requests mid-implementation.
+- Every MCP server, external API, and third-party CLI the plan depends on verified as reachable before approval.
 
 **Check the knowledge store first.** If the project has a `docs/solutions/` directory, search for prior decisions or related problems before proposing anything. If matches are found, read them before Phase 2. Prior solutions may contain decisions, tradeoffs, or known failure modes that eliminate false starts.
 
@@ -118,29 +114,24 @@ When implementation is complete, use `/check` for final review and verification 
 
 ## Gotchas
 
-Real failures from prior sessions, in order of frequency:
-
-- **Wrong path assumed.** Moved files to `~/project` when the repo was at `~/www/project`. Always run `pwd` or `git rev-parse --show-toplevel` before the first filesystem operation.
-- **Credentials surfaced mid-build.** Asked for DashScope API key after three implementation steps. List every dependency with a one-line explanation of why it is needed, before starting.
-- **Analyzed when execution was requested.** User said "帮我做" and got three options. "帮我做," "优化," "改回去" = execute immediately. No option framework.
-- **Designed around a tool that wasn't available.** Planned an MCP-dependent workflow without checking if the MCP server was loaded. Verify external tool availability before the first design step.
-- **Rejected design restarted from scratch.** User said the direction was wrong. Should have asked what specifically failed and re-entered Phase 2 with narrowed constraints, not a blank slate.
-- **Assumed regional API variants were identical.** Shengwang (China) and Agora (International) have different endpoints, auth schemes, and supported vendors. Built against the wrong one. List all regional differences before writing integration code.
-- **Added a new runtime without asking.** Followed official docs' FastAPI examples into a Next.js project, creating a Python backend nobody wanted. Translate doc examples to the user's existing stack; never add a new language or runtime without explicit approval.
+| What happened | Rule |
+|---------------|------|
+| Moved files to `~/project`, repo was at `~/www/project` | Run `pwd` before the first filesystem operation |
+| Asked for API key after 3 implementation steps | List every dependency before handing off |
+| User said "帮我做" and got 3 options | Stay in planning mode. Lead with the recommended option, and treat user acceptance as plan approval, not implementation approval. |
+| Planned MCP workflow without checking if MCP was loaded | Verify tool availability before handing off, not mid-implementation |
+| Rejected design restarted from scratch | Ask what specifically failed, re-enter with narrowed constraints |
+| Built against wrong regional API (Shengwang vs Agora) | List all regional differences before writing integration code |
+| Added FastAPI backend to a Next.js project | Never add a new language or runtime without explicit approval |
+| User said "just do it" before approving the design | Treat it as approval of the last option presented. State which option was selected, then finish the plan. Do not implement inside `/think`. |
 
 ## Output
-
-For each issue found in Phase 3:
-- What it is (1 sentence)
-- Specific recommendation ("move X to Y because Z", not "consider refactoring")
-- Fix size: small, medium, large
-- Risk if ignored: low, medium, high
 
 **Approved design summary:**
 - **Building**: what this is (1 paragraph)
 - **Not building**: explicit out-of-scope list
 - **Approach**: chosen option with rationale
 - **Key decisions**: 3-5 with reasoning
-- **Unknowns**: anything needing resolution during implementation
+- **Unknowns**: only items that are explicitly deferred with a stated reason and a clear owner. Not vague gaps. If an unknown blocks a decision, loop back before approval.
 
-Close with one-line status per architecture section: clear, flagged, or skipped with reason.
+After the user approves the design, stop. Implementation starts only when requested.

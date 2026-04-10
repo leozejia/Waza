@@ -20,7 +20,11 @@ curl -sL "https://r.jina.ai/{url}"
 
 Wide coverage, preserves image links. Use if defuddle.md returns empty or errors.
 
-### 3. Local tools
+### 3. Web search plugin reader (if available)
+
+If a web search plugin is installed (e.g., PipeLLM), the cascade tries its reader tool before local fallback. Handles JavaScript-rendered pages better than free proxies.
+
+### 4. Local tools
 
 ```bash
 npx agent-fetch "{url}" --json
@@ -28,7 +32,21 @@ npx agent-fetch "{url}" --json
 defuddle parse "{url}" -m -j
 ```
 
-Last resort if both proxies fail.
+Last resort if both proxies fail. These commands may return JSON, so extract the Markdown-bearing field before returning or saving the result. Raw JSON is not a valid final output for `/read`.
+
+## GitHub URLs
+
+GitHub file URLs (`github.com/user/repo/blob/...`) render heavy HTML. The proxy cascade often returns partial or nav-heavy content. Prefer:
+
+```bash
+# Raw file content (fastest)
+curl -sL "https://raw.githubusercontent.com/{user}/{repo}/{branch}/{path}"
+
+# Via gh CLI (works with private repos)
+gh api repos/{user}/{repo}/contents/{path} --jq '.content' | base64 -d
+```
+
+Use the proxy cascade only as a fallback for GitHub pages that are not raw file views (e.g., issue threads, README renders).
 
 ## PDF to Markdown
 

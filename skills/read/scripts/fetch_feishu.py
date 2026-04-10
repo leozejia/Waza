@@ -33,6 +33,10 @@ except ImportError:
 API = "https://open.feishu.cn/open-apis"
 
 
+def yaml_string(value):
+    return json.dumps("" if value is None else str(value), ensure_ascii=False)
+
+
 def get_token():
     app_id = os.environ.get("FEISHU_APP_ID")
     app_secret = os.environ.get("FEISHU_APP_SECRET")
@@ -206,9 +210,9 @@ def to_markdown(r):
         return f"Error: {r['error']}"
     parts = [
         "---",
-        f'title: "{r["title"]}"',
-        f'document_id: "{r["document_id"]}"',
-        f'url: "{r["url"]}"',
+        f"title: {yaml_string(r.get('title', ''))}",
+        f"document_id: {yaml_string(r.get('document_id', ''))}",
+        f"url: {yaml_string(r.get('url', ''))}",
         "---",
         "",
         f"# {r['title']}" if r.get("title") else "",
